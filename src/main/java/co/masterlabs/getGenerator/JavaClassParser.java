@@ -87,8 +87,7 @@ public class JavaClassParser{
                     }
                     else{
                         int l = line.trim().length()-1;
-                        System.out.println(l);
-                        line = line.trim().substring(0,l);
+                        line = line.trim();
                         System.out.println(line);
                         splitLine = line.split(" ");
                         retVal.add(generateGetterString(splitLine[0], splitLine[1]));
