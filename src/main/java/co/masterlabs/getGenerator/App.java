@@ -32,6 +32,7 @@ public class App
         try{
 
             List<String> list = JavaClassParser.parseClassFile(new File(args[0]));
+            FileGenerator.generateFile(list, args[0]);
         }
         catch (InvalidAttributesException e){
             e.printStackTrace();
