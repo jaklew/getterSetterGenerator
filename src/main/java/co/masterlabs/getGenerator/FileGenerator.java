@@ -4,27 +4,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.List;
+import java.util.Map;
 
 public class FileGenerator{
-    public static void generateFile(List<String> inputList, String inputFilePath){
+    public static void generateFile(Map<String,Object> inputList, String inputFilePath){
 
-        try{
-            File outputFile = new File(prepareOutputFilePath(inputFilePath));
-            BufferedWriter bWriter = new BufferedWriter(new FileWriter(outputFile));
-            for(String s : inputList){
-                bWriter.write(s + "\n");
-            }
-            bWriter.close();
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
     }
 
     private static String prepareOutputFilePath(String inputFilePath){
-        int lastSlashLocation = inputFilePath.lastIndexOf('/');
+        int lastSlashLocation = inputFilePath.lastIndexOf('\\');
         String folder = inputFilePath.substring(0,lastSlashLocation);
-
-        return folder + "wynikGeneracji.java";
+        System.out.println(folder);
+        return folder + "\\wynikGeneracji.java";
     }
 }

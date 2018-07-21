@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -48,21 +49,26 @@ public class JavaClassParser{
         getterBuilder.append(_modifier);
         getterBuilder.append(type);
         getterBuilder.append(_getter);
-        getterBuilder.append(item.substring(0,1).toUpperCase() + item.substring(1,item.length()) + no); //getlista_itemowNo -> getLista_itemowNo (trzymanie się konwencji nazywania getterów)
+        getterBuilder.append(item.substring(0,1).toUpperCase() + item.substring(1,item.length()) + (no+1)); //getlista_itemowNo -> getLista_itemowNo (trzymanie się konwencji nazywania getterów)
         getterBuilder.append("{\n");
         getterBuilder.append(String.format("\treturn %s.get(%d)",item.trim(),no));
         getterBuilder.append("\n}");
         return getterBuilder.toString();
     }
 
-    public static List<String> parseClassFile(File f) throws InvalidAttributesException{
+    public static Map<String,Object> parseClassFile(File f) throws InvalidAttributesException{
         if(!f.getName().endsWith(".java")) throw new InvalidAttributesException("Invalid filename");
         
-        List<String> retVal = new ArrayList<String>();
-        
+        Map<String,Object> retVal = new HashMap<String,Object>(); //mapa z polami: Constructor (String), Getters(List<String>), Setters(List<String>) 
+        String constructor = "";
+        List<String> gettersList = new ArrayList<String>();
+        List<String> settersList = new ArrayList<String>();
+
+
         Pattern p = Pattern.compile("\\<(.*?)\\>");
 
         String line;
+
         String[] splitLine;
 
         try{
@@ -80,14 +86,30 @@ public class JavaClassParser{
                         if(m.find()){
                             splitLine = splitLine[0].split(String.format("\\<%s\\>",m.group(1)));
                             for(int i = 0; i < howManyGetters; i++){
-                                retVal.add(generateGetterString(m.group(1), splitLine[1].trim(), i+1));
+                                gettersList.add(generateGetterString(m.group(1), splitLine[1].trim(), i));
                             }
+                            constructor += String.format("%s = new List<%s>();\n", splitLine[1], m.group(1));
                         }
                         else{
                             bReader.close();
                             throw new InvalidAttributesException("List type not specified");
-                        } 
+                        }
+                        
                     }
+                    else if (line.contains("class")){
+                        line = line.trim();
+                        splitLine = line.split("\\s");
+                        try{
+                            String className = splitLine[3];
+                            constructor = "public " + className + "(Document doc){\n";
+                        }   
+                        catch(Exception e){
+                            System.out.println("Błąd w generacji konstruktora");
+                            e.printStackTrace();
+                            System.out.println("Koniec komunikatu o błędzie.");
+                        }
+                    }
+
                     else{
                         
                         line = line.trim();
@@ -95,11 +117,18 @@ public class JavaClassParser{
                         splitLine = line.split(" ");
                         int l = splitLine[1].trim().length()-1;
                         splitLine[1] = splitLine[1].substring(0, l);
-                        retVal.add(generateGetterString(splitLine[0], splitLine[1]));
-                        retVal.add(generateSetterString(splitLine[0], splitLine[1]));
+                        gettersList.add(generateGetterString(splitLine[0], splitLine[1]));
+                        settersList.add(generateSetterString(splitLine[0], splitLine[1]));
+                        constructor += String.format("this.%s = doc.getItemValue%s(\"%s\");\n", splitLine[1], getItemValueTypeString(splitLine[0]), splitLine[1]);
                     }
                 }
+
+
             }
+            constructor += "}";
+            retVal.put("Constructor",constructor);
+            retVal.put("Getters",gettersList);
+            retVal.put("Setters", settersList);
             bReader.close();
         }
         catch (Exception e){
@@ -121,5 +150,9 @@ public class JavaClassParser{
         catch(Exception e){
             e.printStackTrace();
         }
+    }
+
+    private static String getItemValueTypeString(String typeString){
+        return "";
     }
 }
