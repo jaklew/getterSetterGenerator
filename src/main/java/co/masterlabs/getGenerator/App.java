@@ -1,12 +1,12 @@
 package co.masterlabs.getGenerator;
 import java.io.File;
-import java.util.Map;
+import java.util.TreeMap;
 
 import javax.naming.directory.InvalidAttributesException;
 
 
 /*
-    Program służący do generowania setterów, getterów i domyślnego konstruktora pobierającego dane z NotesDocument poza środowiskiem Domino
+    Program służący do generowania setterów, getterów i domyślnego konstruktora pobierającego dane z NotesDocument poza środowiskiem Domino, w szczególności przy używaniu xDocReport
     dane wejściowe do programu:
         ścieżka do pliku .java / .txt, w którym znajduje się lista pól w formacie:
         public class MojaKlasa
@@ -32,7 +32,7 @@ public class App
     { 
         try{
 
-            Map<String,Object> map = JavaClassParser.parseClassFile(new File(args[0]));
+            TreeMap<String,Object> map = JavaClassParser.parseClassFile(new File(args[0]));
             FileGenerator.generateFile(map, args[0]);
         }
         catch (InvalidAttributesException e){

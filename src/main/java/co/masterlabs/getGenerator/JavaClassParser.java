@@ -8,7 +8,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,10 +56,10 @@ public class JavaClassParser{
         return getterBuilder.toString();
     }
 
-    public static Map<String,Object> parseClassFile(File f) throws InvalidAttributesException{
+    public static TreeMap<String,Object> parseClassFile(File f) throws InvalidAttributesException{
         if(!f.getName().endsWith(".java")) throw new InvalidAttributesException("Invalid filename");
         
-        Map<String,Object> retVal = new HashMap<String,Object>(); //mapa z polami: Constructor (String), Getters(List<String>), Setters(List<String>) 
+        TreeMap<String,Object> retVal = new TreeMap<String,Object>(); //mapa z polami: Constructor (String), Getters(List<String>), Setters(List<String>) 
         String constructor = "";
         List<String> gettersList = new ArrayList<String>();
         List<String> settersList = new ArrayList<String>();
@@ -88,7 +88,7 @@ public class JavaClassParser{
                             for(int i = 0; i < howManyGetters; i++){
                                 gettersList.add(generateGetterString(m.group(1), splitLine[1].trim(), i));
                             }
-                            constructor += String.format("%s = new List<%s>();\n", splitLine[1], m.group(1));
+                            constructor += String.format("\t%s = new List<%s>();\n", splitLine[1], m.group(1));
                         }
                         else{
                             bReader.close();
@@ -100,26 +100,29 @@ public class JavaClassParser{
                         line = line.trim();
                         splitLine = line.split("\\s");
                         try{
-                            String className = splitLine[3];
+                            String className = splitLine[2];
                             constructor = "public " + className + "(Document doc){\n";
                         }   
                         catch(Exception e){
-                            System.out.println("Błąd w generacji konstruktora");
+                            System.out.println("Blad w generacji konstruktora");
                             e.printStackTrace();
-                            System.out.println("Koniec komunikatu o błędzie.");
+                            System.out.println("Koniec komunikatu o bledzie.");
                         }
                     }
 
                     else{
                         
                         line = line.trim();
-                        System.out.println(line);
-                        splitLine = line.split(" ");
-                        int l = splitLine[1].trim().length()-1;
-                        splitLine[1] = splitLine[1].substring(0, l);
-                        gettersList.add(generateGetterString(splitLine[0], splitLine[1]));
-                        settersList.add(generateSetterString(splitLine[0], splitLine[1]));
-                        constructor += String.format("this.%s = doc.getItemValue%s(\"%s\");\n", splitLine[1], getItemValueTypeString(splitLine[0]), splitLine[1]);
+                        splitLine = line.split("\\s");
+
+                        if(splitLine.length == 2){
+                            int l = splitLine[1].trim().length()-1;
+                            splitLine[1] = splitLine[1].substring(0, l);
+                            gettersList.add(generateGetterString(splitLine[0], splitLine[1]));
+                            settersList.add(generateSetterString(splitLine[0], splitLine[1]));
+                            constructor += String.format("\tthis.%s = doc.getItemValue%s(\"%s\");", splitLine[1], getItemValueTypeString(splitLine[0]), splitLine[1]);
+                        }
+                        
                     }
                 }
 
@@ -153,6 +156,9 @@ public class JavaClassParser{
     }
 
     private static String getItemValueTypeString(String typeString){
+        if(typeString.equalsIgnoreCase("int")) return "Integer";
+        else if(typeString.equalsIgnoreCase("double")) return "Double";
+        else if(typeString.equalsIgnoreCase("String")) return typeString;
         return "";
     }
 }
